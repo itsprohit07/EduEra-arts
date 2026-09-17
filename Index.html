@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduEra - Class 11 Arts Study Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #090a0f;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    .ambient-glow {
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, rgba(255, 87, 34, 0.28) 0%, rgba(255, 87, 34, 0) 70%);
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(40px);
+    }
+
+    .glass-card {
+      background: rgba(18, 20, 29, 0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 87, 34, 0.3);
+    }
+
+    .nav-blur {
+      background: rgba(9, 10, 15, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .btn-gradient {
+      background: linear-gradient(135deg, #ff5722 0%, #f44336 100%);
+      box-shadow: 0 4px 18px rgba(255, 87, 34, 0.35);
+      transition: all 0.25s ease;
+    }
+
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255, 87, 34, 0.5);
+    }
+
+    .badge-status {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .status-unfamiliar { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .status-learning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-familiar { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .status-mastered { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 87, 34, 0.5); }
+
+    .flashcard { perspective: 1000px; }
+    .flashcard-inner {
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+    .flashcard-front, .flashcard-back { backface-visibility: hidden; }
+    .flashcard-back { transform: rotateY(180deg); }
+  </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between custom-scrollbar">
+
+  <div class="ambient-glow"></div>
+
+  <!-- HEADER NAVBAR -->
+  <header class="sticky top-0 z-40 nav-blur px-4 lg:px-8 py-3 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="#" class="flex items-center gap-2 group">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-orange-600/30 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <span class="text-xl font-black tracking-tight text-white flex items-center gap-1">
+              EduEra <span class="text-xs px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 font-bold border border-orange-500/30">ARTS 11th</span>
+            </span>
+            <p class="text-[10px] text-gray-400 font-medium">Class 11 Humanities Portal</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Role Indicator -->
+        <div id="roleBadge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-800/80 border border-gray-700/80 text-gray-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Student Mode</span>
+        </div>
+
+        <!-- Admin Toggle Button -->
+        <button id="adminToggleBtn" onclick="toggleAdminAccess()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-lock text-orange-400" id="adminLockIcon"></i>
+          <span id="adminBtnText">Admin Access</span>
+        </button>
+
+        <!-- Admin Upload Trigger (Visible only in Admin mode) -->
+        <button id="headerUploadBtn" onclick="openUploadModal()" class="hidden btn-gradient px-4 py-1.5 rounded-xl text-xs font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> Upload PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 w-full relative z-10 flex-1">
+
+    <!-- HERO / STATS OVERVIEW -->
+    <section class="mb-8">
+      <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          
+          <div class="lg:col-span-7">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold mb-3">
+              <i class="fa-solid fa-book-open"></i> NCERT Class 11 Arts Syllabus
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+              Master History, Psychology & Sociology
+            </h1>
+            <p class="text-gray-400 text-sm leading-relaxed mb-4">
+              Access authentic notes, practice NCERT flashcards, and read chapter-wise PDFs designed specifically for Class 11 Humanities students.
+            </p>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="px-2.5 py-1 rounded-lg bg-gray-800/80 text-gray-300 border border-gray-700/50"><i class="fa-solid fa-landmark text-amber-500 mr-1"></i> History</span>
+              <span class="px-2.5 py-1 rounded-lg bg-gray-800/80 text-gray-300 border border-gray-700/50"><i class="fa-solid fa-brain text-purple-400 mr-1"></i> Psychology</span>
+              <span class="px-2.5 py-1 rounded-lg bg-gray-800/80 text-gray-300 border border-gray-700/50"><i class="fa-solid fa-users text-blue-400 mr-1"></i> Sociology</span>
+              <span class="px-2.5 py-1 rounded-lg bg-gray-800/80 text-gray-300 border border-gray-700/50"><i class="fa-solid fa-scale-balanced text-emerald-400 mr-1"></i> Political Science</span>
+            </div>
+          </div>
+
+          <!-- MASTERY DASHBOARD WIDGET -->
+          <div class="lg:col-span-5 bg-black/40 rounded-xl p-4 border border-white/5">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400">Mastery Breakdown</h3>
+              <span id="overallProgressText" class="text-xs font-extrabold text-orange-400">0% Complete</span>
+            </div>
+
+            <!-- Stats grid -->
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <div class="bg-gray-900/60 p-2.5 rounded-lg border border-red-500/20 flex justify-between items-center">
+                <span class="text-xs text-gray-400">Unfamiliar</span>
+                <span id="countUnfamiliar" class="text-sm font-extrabold text-red-400">0</span>
+              </div>
+              <div class="bg-gray-900/60 p-2.5 rounded-lg border border-amber-500/20 flex justify-between items-center">
+                <span class="text-xs text-gray-400">Learning</span>
+                <span id="countLearning" class="text-sm font-extrabold text-amber-400">0</span>
+              </div>
+              <div class="bg-gray-900/60 p-2.5 rounded-lg border border-blue-500/20 flex justify-between items-center">
+                <span class="text-xs text-gray-400">Familiar</span>
+                <span id="countFamiliar" class="text-sm font-extrabold text-blue-400">0</span>
+              </div>
+              <div class="bg-gray-900/60 p-2.5 rounded-lg border border-emerald-500/20 flex justify-between items-center">
+                <span class="text-xs text-gray-400">Mastered</span>
+                <span id="countMastered" class="text-sm font-extrabold text-emerald-400">0</span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div>
+              <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div id="masteryProgressBar" class="h-full bg-gradient-to-r from-orange-500 to-emerald-400 w-0 transition-all duration-500"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE TOOLS BAR -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      
+      <!-- Flashcard Practice Box -->
+      <div class="md:col-span-2 glass-card rounded-2xl p-5 flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-bolt text-orange-400 text-sm"></i>
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Quick Concept Flashcards</h2>
+          </div>
+          <span class="text-[11px] text-gray-400">Click card to flip</span>
+        </div>
+
+        <div id="flashcardContainer" class="flashcard w-full min-h-[140px] cursor-pointer" onclick="toggleFlashcardFlip()">
+          <div id="flashcardInner" class="flashcard-inner relative w-full h-full min-h-[140px]">
+            <!-- Front -->
+            <div class="flashcard-front absolute inset-0 bg-gray-900/90 border border-gray-700/60 rounded-xl p-4 flex flex-col justify-center items-center text-center">
+              <span id="fcSubject" class="text-[10px] font-bold px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 mb-2">History</span>
+              <p id="fcQuestion" class="text-sm font-semibold text-gray-200">Loading Flashcard...</p>
+            </div>
+            <!-- Back -->
+            <div class="flashcard-back absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800 border border-orange-500/40 rounded-xl p-4 flex flex-col justify-center items-center text-center">
+              <span class="text-[10px] font-bold text-emerald-400 mb-1">ANSWER / KEY CONCEPT</span>
+              <p id="fcAnswer" class="text-xs text-gray-300 leading-relaxed">Loading Answer...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center mt-3 pt-2 border-t border-white/5">
+          <button onclick="prevFlashcard()" class="text-xs text-gray-400 hover:text-white px-2 py-1"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+          <span id="fcCounter" class="text-xs text-gray-500 font-medium">1 / 5</span>
+          <button onclick="nextFlashcard()" class="text-xs text-orange-400 font-semibold hover:text-orange-300 px-2 py-1">Next <i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <!-- Quick Pomodoro Timer -->
+      <div class="glass-card rounded-2xl p-5 flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-stopwatch text-orange-400"></i>
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider">Focus Timer</h2>
+          </div>
+          <span id="timerStatus" class="text-[10px] font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10">READY</span>
+        </div>
+
+        <div class="text-center my-2">
+          <div id="timerDisplay" class="text-4xl font-extrabold text-white tracking-wider font-mono">25:00</div>
+          <p class="text-[11px] text-gray-400 mt-1">Pomodoro Technique for Arts Reading</p>
+        </div>
+
+        <div class="flex gap-2">
+          <button id="timerBtn" onclick="toggleTimer()" class="flex-1 btn-gradient py-1.5 rounded-lg text-xs font-bold text-white">Start</button>
+          <button onclick="resetTimer()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-300 hover:bg-gray-700">Reset</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FILTER & SEARCH BAR -->
+    <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-6">
+      
+      <!-- Subject Tabs -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
+        <button onclick="filterSubject('ALL')" class="subject-tab active-tab px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-orange-600 text-white shadow-md">All Subjects</button>
+        <button onclick="filterSubject('History')" class="subject-tab px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800/80 text-gray-300 hover:bg-gray-700 border border-gray-700/60">History</button>
+        <button onclick="filterSubject('Psychology')" class="subject-tab px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800/80 text-gray-300 hover:bg-gray-700 border border-gray-700/60">Psychology</button>
+        <button onclick="filterSubject('Sociology')" class="subject-tab px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800/80 text-gray-300 hover:bg-gray-700 border border-gray-700/60">Sociology</button>
+        <button onclick="filterSubject('Political Science')" class="subject-tab px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-gray-800/80 text-gray-300 hover:bg-gray-700 border border-gray-700/60">Political Science</button>
+      </div>
+
+      <!-- Search Input -->
+      <div class="relative min-w-[240px]">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search topics, chapters..." class="w-full bg-gray-900/90 border border-gray-700/80 rounded-xl pl-9 pr-4 py-2 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors">
+      </div>
+    </div>
+
+    <!-- PDF & STUDY MATERIALS GRID -->
+    <section>
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-folder-open text-orange-400"></i> Study Resources & Notes
+        </h2>
+        <span id="resourceCount" class="text-xs text-gray-400">Showing 5 resources</span>
+      </div>
+
+      <div id="materialsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Dynamic PDF Cards will render here -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/5 py-6 bg-black/60 mt-12 relative z-10 text-center text-xs text-gray-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <p>© 2026 EduEra - Class 11 Arts Academic Portal</p>
+      <div class="flex items-center gap-4 text-gray-400">
+        <span>History</span> • <span>Psychology</span> • <span>Sociology</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- PDF VIEWER MODAL -->
+  <div id="pdfModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col">
+    <div class="flex justify-between items-center px-4 py-3 bg-gray-900 border-b border-gray-800">
+      <div class="flex items-center gap-3">
+        <span id="pdfModalSubject" class="text-xs font-bold px-2.5 py-0.5 rounded bg-orange-500/20 text-orange-400">Subject</span>
+        <h3 id="pdfModalTitle" class="text-sm font-bold text-white truncate max-w-md">Document Title</h3>
+      </div>
+      <div class="flex items-center gap-2">
+        <a id="pdfDownloadBtn" href="#" target="_blank" download class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-200 font-semibold flex items-center gap-1.5">
+          <i class="fa-solid fa-download"></i> Open Original
+        </a>
+        <button onclick="closePdfModal()" class="w-8 h-8 rounded-lg bg-gray-800 hover:bg-red-500/20 text-gray-400 hover:text-red-400 flex items-center justify-center transition-colors">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+    </div>
+    <div class="flex-1 bg-gray-950 p-2 sm:p-4">
+      <iframe id="pdfIframe" class="w-full h-full rounded-xl border border-gray-800 bg-white" src="about:blank"></iframe>
+    </div>
+  </div>
+
+  <!-- ADMIN PASSCODE MODAL -->
+  <div id="passcodeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-2xl p-6 max-w-xs w-full border border-orange-500/30 text-center">
+      <div class="w-12 h-12 rounded-full bg-orange-500/10 text-orange-400 flex items-center justify-center mx-auto mb-3 text-xl">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
+      <h3 class="text-base font-bold text-white mb-1">Admin Passcode</h3>
+      <p class="text-xs text-gray-400 mb-4">Enter 4-digit PIN to upload/manage resources.</p>
+      
+      <input type="password" id="passcodeInput" maxlength="4" placeholder="••••" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-center text-lg tracking-widest text-white focus:outline-none focus:border-orange-500 mb-4">
+      
+      <div class="flex gap-2">
+        <button onclick="closePasscodeModal()" class="flex-1 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-300">Cancel</button>
+        <button onclick="verifyPasscode()" class="flex-1 btn-gradient py-2 rounded-xl text-xs font-bold text-white">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN UPLOAD PDF MODAL -->
+  <div id="uploadModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card rounded-2xl p-6 max-w-lg w-full border border-gray-700">
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-800">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-cloud-arrow-up text-orange-400"></i> Admin: Upload Study Material
+        </h3>
+        <button onclick="closeUploadModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="uploadForm" onsubmit="handlePdfUpload(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-gray-300 mb-1">Resource Title *</label>
+          <input type="text" id="upTitle" required placeholder="e.g. History Ch-1 Writing & City Life Notes" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1">Subject *</label>
+            <select id="upSubject" required class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+              <option value="History">History</option>
+              <option value="Psychology">Psychology</option>
+              <option value="Sociology">Sociology</option>
+              <option value="Political Science">Political Science</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1">Chapter / Topic</label>
+            <input type="text" id="upChapter" placeholder="e.g. Chapter 1" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-300 mb-1">Upload Method</label>
+          <div class="flex gap-4 mb-2">
+            <label class="inline-flex items-center text-xs text-gray-300 cursor-pointer">
+              <input type="radio" name="uploadType" value="link" checked onclick="toggleUploadType('link')" class="text-orange-500 focus:ring-0">
+              <span class="ml-2">PDF Link (Google Drive / Web)</span>
+            </label>
+            <label class="inline-flex items-center text-xs text-gray-300 cursor-pointer">
+              <input type="radio" name="uploadType" value="file" onclick="toggleUploadType('file')" class="text-orange-500 focus:ring-0">
+              <span class="ml-2">Device File</span>
+            </label>
+          </div>
+
+          <div id="urlInputContainer">
+            <input type="url" id="upUrl" placeholder="https://drive.google.com/... or https://example.com/notes.pdf" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500">
+          </div>
+
+          <div id="fileInputContainer" class="hidden">
+            <input type="file" id="upFile" accept=".pdf" class="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-orange-500/20 file:text-orange-400 hover:file:bg-orange-500/30">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-300 mb-1">Short Description / Key Concepts</label>
+          <textarea id="upDesc" rows="2" placeholder="Brief overview of NCERT topics covered in this document..." class="w-full bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-orange-500"></textarea>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeUploadModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-300">Cancel</button>
+          <button type="submit" class="btn-gradient px-5 py-2 rounded-xl text-xs font-bold text-white">Save & Publish</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // DEFAULT STATE & DATA
+    const ADMIN_PIN = "1234";
+    let isAdmin = false;
+    let currentFilter = "ALL";
+    let searchQuery = "";
+
+    const defaultResources = [
+      {
+        id: "res-1",
+        title: "Writing and City Life (Mesopotamia)",
+        subject: "History",
+        chapter: "Chapter 1",
+        description: "NCERT Class 11 History Notes covering Mesopotamian civilization, cuneiform script, and urban economy.",
+        url: "https://ncert.nic.in/textbook/pdf/kehs101.pdf",
+        status: "Learning",
+        dateAdded: "2026-02-10"
+      },
+      {
+        id: "res-2",
+        title: "An Empire Across Three Continents",
+        subject: "History",
+        chapter: "Chapter 2",
+        description: "Comprehensive breakdown of Roman Empire, administration, gender roles, and economic expansion.",
+        url: "https://ncert.nic.in/textbook/pdf/kehs102.pdf",
+        status: "Unfamiliar",
+        dateAdded: "2026-02-12"
+      },
+      {
+        id: "res-3",
+        title: "What is Psychology? - Introduction",
+        subject: "Psychology",
+        chapter: "Chapter 1",
+        description: "Understanding human behavior, mental processes, discipline scope, and psychology as a natural/social science.",
+        url: "https://ncert.nic.in/textbook/pdf/kepy101.pdf",
+        status: "Familiar",
+        dateAdded: "2026-02-15"
+      },
+      {
+        id: "res-4",
+        title: "Methods of Enquiry in Psychology",
+        subject: "Psychology",
+        chapter: "Chapter 2",
+        description: "Detailed notes on observational methods, experimental methods, psychological testing, and surveys.",
+        url: "https://ncert.nic.in/textbook/pdf/kepy102.pdf",
+        status: "Mastered",
+        dateAdded: "2026-02-18"
+      },
+      {
+        id: "res-5",
+        title: "Sociology and Society",
+        subject: "Sociology",
+        chapter: "Chapter 1",
+        description: "Introduction to sociological perspective, social order, culture, and social groups in Class 11 Syllabus.",
+        url: "https://ncert.nic.in/textbook/pdf/kesy101.pdf",
+        status: "Learning",
+        dateAdded: "2026-02-20"
+      }
+    ];
+
+    const flashcardsData = [
+      { subject: "History", q: "Where was the earliest Mesopotamia writing system developed?", a: "In Mesopotamia (modern Iraq) around 3200 BCE, using Cuneiform script on clay tablets." },
+      { subject: "Psychology", q: "Define Introspection in Psychology.", a: "A method where individuals examine and describe their own conscious mental processes and thoughts." },
+      { subject: "Sociology", q: "Who coined the term 'Sociology'?", a: "Auguste Comte in 1838, often regarded as the father of Sociology." },
+      { subject: "History", q: "Which emperor established the Roman Principate in 27 BCE?", a: "Augustus (formerly Octavian), the adopted son of Julius Caesar." },
+      { subject: "Psychology", q: "What is the difference between basic & applied psychology?", a: "Basic psychology focuses on theories/research, while applied psychology solves real-world human problems." }
+    ];
+
+    let currentFcIndex = 0;
+    let timerInterval = null;
+    let timerSeconds = 25 * 60;
+    let isTimerRunning = false;
+
+    // LOCAL STORAGE HANDLING
+    function getResources() {
+      const stored = localStorage.getItem("eduera_resources");
+      if (!stored) {
+        localStorage.setItem("eduera_resources", JSON.stringify(defaultResources));
+        return defaultResources;
+      }
+      return JSON.parse(stored);
+    }
+
+    function saveResources(resources) {
+      localStorage.setItem("eduera_resources", JSON.stringify(resources));
+      renderResources();
+      updateMasteryStats();
+    }
+
+    // RENDER RESOURCES
+    function renderResources() {
+      const grid = document.getElementById("materialsGrid");
+      const resources = getResources();
+
+      const filtered = resources.filter(res => {
+        const matchesSubject = currentFilter === "ALL" || res.subject === currentFilter;
+        const matchesSearch = res.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                              res.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              (res.chapter && res.chapter.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesSubject && matchesSearch;
+      });
+
+      document.getElementById("resourceCount").innerText = `Showing ${filtered.length} resources`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-12 text-center text-gray-500">
+            <i class="fa-solid fa-folder-open text-3xl mb-2 text-gray-600"></i>
+            <p class="text-sm font-semibold">No study materials found for this selection.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(res => {
+        let statusClass = "status-unfamiliar";
+        if(res.status === "Learning") statusClass = "status-learning";
+        if(res.status === "Familiar") statusClass = "status-familiar";
+        if(res.status === "Mastered") statusClass = "status-mastered";
+
+        return `
+          <div class="glass-card rounded-2xl p-5 flex flex-col justify-between transition-all hover:-translate-y-1">
+            <div>
+              <div class="flex justify-between items-start mb-3">
+                <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/20">
+                  ${res.subject}
+                </span>
+                
+                <!-- Status Dropdown -->
+                <select onchange="updateResourceStatus('${res.id}', this.value)" class="badge-status ${statusClass} bg-transparent outline-none cursor-pointer">
+                  <option value="Unfamiliar" class="bg-gray-900 text-red-400" ${res.status === 'Unfamiliar' ? 'selected' : ''}>Unfamiliar</option>
+                  <option value="Learning" class="bg-gray-900 text-amber-400" ${res.status === 'Learning' ? 'selected' : ''}>Learning</option>
+                  <option value="Familiar" class="bg-gray-900 text-blue-400" ${res.status === 'Familiar' ? 'selected' : ''}>Familiar</option>
+                  <option value="Mastered" class="bg-gray-900 text-emerald-400" ${res.status === 'Mastered' ? 'selected' : ''}>Mastered</option>
+                </select>
+              </div>
+
+              <h3 class="text-base font-bold text-white mb-1 leading-snug">${res.title}</h3>
+              <p class="text-xs text-orange-400/80 font-medium mb-2">${res.chapter || 'General Notes'}</p>
+              <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed mb-4">${res.description}</p>
+            </div>
+
+            <div class="pt-3 border-t border-white/5 flex items-center justify-between gap-2">
+              <button onclick="viewPdf('${res.url}', '${res.title.replace(/'/g, "\\'")}', '${res.subject}')" class="flex-1 btn-gradient py-1.5 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-file-pdf"></i> Read PDF
+              </button>
+
+              ${isAdmin ? `
+                <button onclick="deleteResource('${res.id}')" title="Delete Resource" class="w-8 h-8 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 flex items-center justify-center transition-colors">
+                  <i class="fa-solid fa-trash-can text-xs"></i>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // UPDATE MASTERY STATS
+    function updateMasteryStats() {
+      const resources = getResources();
+      let counts = { Unfamiliar: 0, Learning: 0, Familiar: 0, Mastered: 0 };
+
+      resources.forEach(r => {
+        if (counts[r.status] !== undefined) counts[r.status]++;
+      });
+
+      document.getElementById("countUnfamiliar").innerText = counts.Unfamiliar;
+      document.getElementById("countLearning").innerText = counts.Learning;
+      document.getElementById("countFamiliar").innerText = counts.Familiar;
+      document.getElementById("countMastered").innerText = counts.Mastered;
+
+      const total = resources.length;
+      const progressPercent = total > 0 ? Math.round((counts.Mastered / total) * 100) : 0;
+
+      document.getElementById("overallProgressText").innerText = `${progressPercent}% Mastered`;
+      document.getElementById("masteryProgressBar").style.width = `${progressPercent}%`;
+    }
+
+    function updateResourceStatus(id, newStatus) {
+      let resources = getResources();
+      resources = resources.map(r => r.id === id ? { ...r, status: newStatus } : r);
+      saveResources(resources);
+    }
+
+    function deleteResource(id) {
+      if (!confirm("Admin: Are you sure you want to delete this resource?")) return;
+      let resources = getResources();
+      resources = resources.filter(r => r.id !== id);
+      saveResources(resources);
+    }
+
+    // ADMIN ACCESS LOGIC
+    function toggleAdminAccess() {
+      if (isAdmin) {
+        isAdmin = false;
+        updateRoleUI();
+      } else {
+        document.getElementById("passcodeModal").classList.remove("hidden");
+        document.getElementById("passcodeInput").focus();
+      }
+    }
+
+    function verifyPasscode() {
+      const code = document.getElementById("passcodeInput").value;
+      if (code === ADMIN_PIN) {
+        isAdmin = true;
+        closePasscodeModal();
+        updateRoleUI();
+      } else {
+        alert("Incorrect PIN! Default PIN is 1234");
+        document.getElementById("passcodeInput").value = "";
+      }
+    }
+
+    function closePasscodeModal() {
+      document.getElementById("passcodeModal").classList.add("hidden");
+      document.getElementById("passcodeInput").value = "";
+    }
+
+    function updateRoleUI() {
+      const roleBadge = document.getElementById("roleBadge");
+      const adminBtnText = document.getElementById("adminBtnText");
+      const adminLockIcon = document.getElementById("adminLockIcon");
+      const headerUploadBtn = document.getElementById("headerUploadBtn");
+
+      if (isAdmin) {
+        roleBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-orange-400 animate-ping"></span> <span class="text-orange-400 font-bold">Admin Active</span>`;
+        adminBtnText.innerText = "Exit Admin Mode";
+        adminLockIcon.className = "fa-solid fa-unlock text-emerald-400";
+        headerUploadBtn.classList.remove("hidden");
+      } else {
+        roleBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> <span>Student Mode</span>`;
+        adminBtnText.innerText = "Admin Access";
+        adminLockIcon.className = "fa-solid fa-lock text-orange-400";
+        headerUploadBtn.classList.add("hidden");
+      }
+      renderResources();
+    }
+
+    // UPLOAD MODAL LOGIC
+    function openUploadModal() {
+      document.getElementById("uploadModal").classList.remove("hidden");
+    }
+
+    function closeUploadModal() {
+      document.getElementById("uploadModal").classList.add("hidden");
+      document.getElementById("uploadForm").reset();
+    }
+
+    function toggleUploadType(type) {
+      if (type === 'link') {
+        document.getElementById("urlInputContainer").classList.remove("hidden");
+        document.getElementById("fileInputContainer").classList.add("hidden");
+      } else {
+        document.getElementById("urlInputContainer").classList.add("hidden");
+        document.getElementById("fileInputContainer").classList.remove("hidden");
+      }
+    }
+
+    function handlePdfUpload(e) {
+      e.preventDefault();
+      const title = document.getElementById("upTitle").value;
+      const subject = document.getElementById("upSubject").value;
+      const chapter = document.getElementById("upChapter").value;
+      const desc = document.getElementById("upDesc").value;
+      const uploadType = document.querySelector('input[name="uploadType"]:checked').value;
+
+      let finalUrl = "";
+
+      if (uploadType === "link") {
+        finalUrl = document.getElementById("upUrl").value;
+        if (!finalUrl) return alert("Please enter a valid URL!");
+        saveNewResource(title, subject, chapter, desc, finalUrl);
+      } else {
+        const fileInput = document.getElementById("upFile");
+        if (fileInput.files.length === 0) return alert("Please select a PDF file!");
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          finalUrl = evt.target.result;
+          saveNewResource(title, subject, chapter, desc, finalUrl);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function saveNewResource(title, subject, chapter, description, url) {
+      const newRes = {
+        id: "res-" + Date.now(),
+        title,
+        subject,
+        chapter,
+        description,
+        url,
+        status: "Unfamiliar",
+        dateAdded: new Date().toISOString().split('T')[0]
+      };
+
+      const resources = getResources();
+      resources.unshift(newRes);
+      saveResources(resources);
+      closeUploadModal();
+      alert("PDF Material published successfully!");
+    }
+
+    // PDF VIEWER
+    function viewPdf(url, title, subject) {
+      const modal = document.getElementById("pdfModal");
+      const iframe = document.getElementById("pdfIframe");
+      document.getElementById("pdfModalTitle").innerText = title;
+      document.getElementById("pdfModalSubject").innerText = subject;
+      document.getElementById("pdfDownloadBtn").href = url;
+
+      let finalViewUrl = url;
+      if (url.includes("drive.google.com")) {
+        finalViewUrl = url.replace("/view", "/preview");
+      }
+
+      iframe.src = finalViewUrl;
+      modal.classList.remove("hidden");
+    }
+
+    function closePdfModal() {
+      document.getElementById("pdfModal").classList.add("hidden");
+      document.getElementById("pdfIframe").src = "about:blank";
+    }
+
+    // FILTERS & SEARCH
+    function filterSubject(sub) {
+      currentFilter = sub;
+      document.querySelectorAll(".subject-tab").forEach(tab => {
+        tab.classList.remove("bg-orange-600", "text-white", "shadow-md");
+        tab.classList.add("bg-gray-800/80", "text-gray-300");
+      });
+      event.target.classList.remove("bg-gray-800/80", "text-gray-300");
+      event.target.classList.add("bg-orange-600", "text-white", "shadow-md");
+      renderResources();
+    }
+
+    function handleSearch() {
+      searchQuery = document.getElementById("searchInput").value;
+      renderResources();
+    }
+
+    // FLASHCARD COMPONENT
+    function updateFlashcard() {
+      const fc = flashcardsData[currentFcIndex];
+      document.getElementById("fcSubject").innerText = fc.subject;
+      document.getElementById("fcQuestion").innerText = fc.q;
+      document.getElementById("fcAnswer").innerText = fc.a;
+      document.getElementById("fcCounter").innerText = `${currentFcIndex + 1} / ${flashcardsData.length}`;
+      document.getElementById("flashcardContainer").classList.remove("flipped");
+    }
+
+    function toggleFlashcardFlip() {
+      document.getElementById("flashcardContainer").classList.toggle("flipped");
+    }
+
+    function nextFlashcard() {
+      currentFcIndex = (currentFcIndex + 1) % flashcardsData.length;
+      updateFlashcard();
+    }
+
+    function prevFlashcard() {
+      currentFcIndex = (currentFcIndex - 1 + flashcardsData.length) % flashcardsData.length;
+      updateFlashcard();
+    }
+
+    // TIMER COMPONENT
+    function toggleTimer() {
+      const btn = document.getElementById("timerBtn");
+      const status = document.getElementById("timerStatus");
+
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        btn.innerText = "Start";
+        status.innerText = "PAUSED";
+        status.className = "text-[10px] font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10";
+      } else {
+        isTimerRunning = true;
+        btn.innerText = "Pause";
+        status.innerText = "FOCUSING";
+        status.className = "text-[10px] font-bold text-orange-400 px-2 py-0.5 rounded bg-orange-500/10";
+
+        timerInterval = setInterval(() => {
+          if (timerSeconds > 0) {
+            timerSeconds--;
+            updateTimerDisplay();
+          } else {
+            clearInterval(timerInterval);
+            alert("Focus session complete! Take a break.");
+            resetTimer();
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerSeconds = 25 * 60;
+      updateTimerDisplay();
+      document.getElementById("timerBtn").innerText = "Start";
+      const status = document.getElementById("timerStatus");
+      status.innerText = "READY";
+      status.className = "text-[10px] font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10";
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timerSeconds / 60);
+      const secs = timerSeconds % 60;
+      document.getElementById("timerDisplay").innerText = 
+        `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // INITIALIZATION
+    window.onload = function() {
+      renderResources();
+      updateMasteryStats();
+      updateFlashcard();
+    };
+  </script>
+</body>
+</html>
